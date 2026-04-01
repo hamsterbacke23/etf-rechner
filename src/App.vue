@@ -40,6 +40,13 @@ const showReal = ref(saved?.showReal ?? false)
 
 watch([startBudget, years, infl, ue, showReal], saveSettings, { deep: true })
 
+function fmt(v) {
+  return Math.round(v).toLocaleString('de-DE') + ' €'
+}
+function fmtK(v) {
+  return v >= 1000 ? Math.round(v / 1000) + 'k' : String(v)
+}
+
 const result = computed(() => {
   const pts = []
   let dep = startBudget.value, totIn = 0, totG = 0
