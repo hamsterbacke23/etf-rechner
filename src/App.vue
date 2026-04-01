@@ -137,7 +137,9 @@ function fmtRet(v) {
             <span>{{ line.label }}</span>
           </div>
           <div v-for="(bar, i) in chartData.bars" :key="'b'+i" class="chart-bar-wrap">
-            <div class="chart-bar" :style="{ height: bar.h + 'px' }" />
+            <div class="chart-bar" :style="{ height: bar.h + 'px' }">
+              <div class="chart-tip">{{ fmt(bar.v) }}</div>
+            </div>
             <div class="chart-lbl">{{ bar.label }}</div>
           </div>
         </div>
@@ -283,7 +285,10 @@ h1 { font-size: 22px; font-weight: 700; color: white; margin: 2px 0 16px; }
 .btn-sm:hover { background: #333; }
 .chart-area { display: flex; align-items: flex-end; gap: 1px; height: 170px; position: relative; padding-bottom: 20px; }
 .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.chart-bar { width: 100%; max-width: 18px; border-radius: 2px 2px 0 0; min-height: 2px; background: linear-gradient(to top, #92400e, #ca8a04); transition: height 0.3s; }
+.chart-bar { width: 100%; max-width: 18px; border-radius: 2px 2px 0 0; min-height: 2px; background: linear-gradient(to top, #92400e, #ca8a04); transition: height 0.3s; position: relative; }
+.chart-bar:hover { filter: brightness(1.2); }
+.chart-tip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #262626; color: #e5e5e5; font-size: 10px; font-family: 'SF Mono', Menlo, monospace; padding: 3px 6px; border-radius: 4px; white-space: nowrap; pointer-events: none; margin-bottom: 4px; border: 1px solid #404040; z-index: 10; }
+.chart-bar:hover .chart-tip { display: block; }
 .chart-lbl { font-size: 8px; color: #555; margin-top: 2px; white-space: nowrap; min-height: 10px; }
 .chart-msline { position: absolute; left: 0; right: 0; border-top: 1px dashed #444; opacity: 0.3; }
 .chart-msline.hit { border-color: #22c55e; opacity: 0.5; }
