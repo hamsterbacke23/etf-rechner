@@ -5,27 +5,40 @@ const MILESTONES = [100000, 150000, 200000, 250000, 300000]
 const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
 const DEFAULT_START = 20000
 
-const savedStart = localStorage.getItem('etf-start-budget')
-const startBudget = ref(savedStart !== null ? Number(savedStart) : DEFAULT_START)
-watch(startBudget, (v) => localStorage.setItem('etf-start-budget', String(v)))
+const LS_KEY = 'etf-rechner-settings'
 
-function fmt(v) {
-  return Math.round(v).toLocaleString('de-DE') + ' €'
-}
-function fmtK(v) {
-  return v >= 1000 ? Math.round(v / 1000) + 'k' : String(v)
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
 }
 
-const years = ref([
+function saveSettings() {
+  localStorage.setItem(LS_KEY, JSON.stringify({
+    startBudget: startBudget.value,
+    years: years.value,
+    infl: infl.value,
+    ue: ue.value,
+    showReal: showReal.value,
+  }))
+}
+
+const saved = loadSettings()
+
+const startBudget = ref(saved?.startBudget ?? DEFAULT_START)
+const years = ref(saved?.years ?? [
   { y: 2026, r: 7, s: 2000 },
   { y: 2027, r: 7, s: 2000 },
   { y: 2028, r: 7, s: 2000 },
   { y: 2029, r: 7, s: 2000 },
   { y: 2030, r: 7, s: 2000 },
 ])
-const infl = ref(2.0)
-const ue = ref({ on: false, y: 2027, m: 0, d: 6, rs: 1000 })
-const showReal = ref(false)
+const infl = ref(saved?.infl ?? 2.0)
+const ue = ref(saved?.ue ?? { on: false, y: 2027, m: 0, d: 6, rs: 1000 })
+const showReal = ref(saved?.showReal ?? false)
+
+watch([startBudget, years, infl, ue, showReal], saveSettings, { deep: true })
 
 const result = computed(() => {
   const pts = []
