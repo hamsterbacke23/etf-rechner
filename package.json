@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/fetch-etf-history.js",
     "build": "vite build",
     "preview": "vite preview"
   },

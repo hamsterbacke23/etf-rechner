@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 const MILESTONES = [100000, 150000, 200000, 250000, 300000]
 const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
@@ -109,6 +109,33 @@ const chartData = computed(() => {
 function fmtRet(v) {
   return (v > 0 ? '+' : '') + v + '%'
 }
+
+// ETF historical returns
+const etfHistory = ref(null)
+const etfLoading = ref(false)
+
+onMounted(async () => {
+  etfLoading.value = true
+  try {
+    const base = import.meta.env.BASE_URL
+    const res = await fetch(base + 'etf-history.json')
+    if (res.ok) etfHistory.value = await res.json()
+  } catch {}
+  etfLoading.value = false
+})
+
+function applyHistorical() {
+  if (!etfHistory.value) return
+  const r = etfHistory.value.returns
+  for (const yr of years.value) {
+    if (r[yr.y] !== undefined) yr.r = r[yr.y]
+  }
+}
+
+const hasHistorical = computed(() => {
+  if (!etfHistory.value) return false
+  return years.value.some(yr => etfHistory.value.returns[yr.y] !== undefined)
+})
 </script>
 
 <template>
@@ -182,9 +209,22 @@ function fmtRet(v) {
 
       <!-- Year params -->
       <div class="panel">
-        <div class="panel-title">Parameter pro Jahr</div>
+        <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Parameter pro Jahr</span>
+          <button v-if="hasHistorical" class="btn-sm btn-hist" @click="applyHistorical">
+            📈 Echte Rendite übernehmen
+          </button>
+        </div>
+        <div v-if="etfHistory" class="etf-info">
+          {{ etfHistory.name }} · Stand: {{ etfHistory.updated }}
+        </div>
         <div v-for="(yr, idx) in years" :key="yr.y" class="yr-row">
-          <div class="yr-label">{{ yr.y }}</div>
+          <div class="yr-label">
+            {{ yr.y }}
+            <span v-if="etfHistory?.returns[yr.y] !== undefined" class="yr-actual">
+              real: {{ fmtRet(etfHistory.returns[yr.y]) }}
+            </span>
+          </div>
           <div class="yr-sliders">
             <div class="sl">
               <div class="sl-head">
@@ -318,7 +358,11 @@ h1 { font-size: 22px; font-weight: 700; color: white; margin: 2px 0 16px; }
 
 /* Year rows */
 .yr-row { margin-bottom: 12px; }
-.yr-label { font-family: 'SF Mono', Menlo, monospace; font-weight: 700; color: #ca8a04; font-size: 14px; margin-bottom: 4px; }
+.yr-label { font-family: 'SF Mono', Menlo, monospace; font-weight: 700; color: #ca8a04; font-size: 14px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.yr-actual { font-size: 10px; color: #737373; font-weight: 400; }
+.btn-hist { font-size: 10px; color: #ca8a04; background: #262626; border: 1px solid #404040; border-radius: 4px; padding: 2px 8px; cursor: pointer; white-space: nowrap; }
+.btn-hist:hover { background: #333; }
+.etf-info { font-size: 10px; color: #525252; margin-bottom: 10px; }
 .yr-sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* Sliders */
