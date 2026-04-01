@@ -217,6 +217,9 @@ const hasHistorical = computed(() => {
         </div>
         <div v-if="etfHistory" class="etf-info">
           {{ etfHistory.name }} · Stand: {{ etfHistory.updated }}
+          <a class="btn-refresh" href="https://github.com/hamsterbacke23/etf-rechner/actions/workflows/deploy.yml" target="_blank" rel="noopener">
+            🔄 Daten aktualisieren
+          </a>
         </div>
         <div v-for="(yr, idx) in years" :key="yr.y" class="yr-row">
           <div class="yr-label">
@@ -362,7 +365,9 @@ h1 { font-size: 22px; font-weight: 700; color: white; margin: 2px 0 16px; }
 .yr-actual { font-size: 10px; color: #737373; font-weight: 400; }
 .btn-hist { font-size: 10px; color: #ca8a04; background: #262626; border: 1px solid #404040; border-radius: 4px; padding: 2px 8px; cursor: pointer; white-space: nowrap; }
 .btn-hist:hover { background: #333; }
-.etf-info { font-size: 10px; color: #525252; margin-bottom: 10px; }
+.etf-info { font-size: 10px; color: #525252; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.btn-refresh { font-size: 10px; color: #ca8a04; background: #262626; border: 1px solid #404040; border-radius: 4px; padding: 2px 8px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn-refresh:hover { background: #333; }
 .yr-sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 /* Sliders */
