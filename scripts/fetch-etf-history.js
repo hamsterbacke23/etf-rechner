@@ -11,11 +11,14 @@ const closes = r.indicators.adjclose[0].adjclose
 
 // Group monthly closes by year, take Jan close as year-start price
 const yearPrices = {}
+const monthlyPrices = {}
 for (let i = 0; i < timestamps.length; i++) {
   if (closes[i] == null) continue
   const d = new Date(timestamps[i] * 1000)
   const y = d.getFullYear()
   const m = d.getMonth()
+  const key = `${y}-${String(m + 1).padStart(2, '0')}`
+  monthlyPrices[key] = Math.round(closes[i] * 1000) / 1000
   if (m === 0 && !yearPrices[y]) yearPrices[y] = closes[i]
 }
 
@@ -44,6 +47,7 @@ const output = {
   name: 'SPDR MSCI ACWI IMI UCITS ETF',
   updated: new Date().toISOString().slice(0, 10),
   returns,
+  monthlyPrices,
 }
 
 writeFileSync('public/etf-history.json', JSON.stringify(output, null, 2))

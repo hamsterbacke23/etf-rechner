@@ -17,6 +17,7 @@ function loadSettings() {
 function saveSettings() {
   localStorage.setItem(LS_KEY, JSON.stringify({
     startBudget: startBudget.value,
+    startMonth: startMonth.value,
     years: years.value,
     infl: infl.value,
     ue: ue.value,
@@ -27,6 +28,7 @@ function saveSettings() {
 const saved = loadSettings()
 
 const startBudget = ref(saved?.startBudget ?? DEFAULT_START)
+const startMonth = ref(saved?.startMonth ?? '2026-02')
 const years = ref(saved?.years ?? [
   { y: 2026, r: 7, s: 2000 },
   { y: 2027, r: 7, s: 2000 },
@@ -38,7 +40,7 @@ const infl = ref(saved?.infl ?? 2.0)
 const ue = ref(saved?.ue ?? { on: false, y: 2027, m: 0, d: 6, rs: 1000 })
 const showReal = ref(saved?.showReal ?? false)
 
-watch([startBudget, years, infl, ue, showReal], saveSettings, { deep: true })
+watch([startBudget, startMonth, years, infl, ue, showReal], saveSettings, { deep: true })
 
 function fmt(v) {
   return Math.round(v).toLocaleString('de-DE') + ' €'
@@ -124,11 +126,33 @@ onMounted(async () => {
   etfLoading.value = false
 })
 
+// Personalized return for current year based on startMonth
+const personalReturn = computed(() => {
+  if (!etfHistory.value?.monthlyPrices) return null
+  const prices = etfHistory.value.monthlyPrices
+  const startPrice = prices[startMonth.value]
+  if (!startPrice) return null
+  // Find latest price
+  const keys = Object.keys(prices).sort()
+  const latestKey = keys[keys.length - 1]
+  const latestPrice = prices[latestKey]
+  if (!latestPrice || latestKey <= startMonth.value) return null
+  return Math.round(((latestPrice / startPrice) - 1) * 1000) / 10
+})
+
 function applyHistorical() {
   if (!etfHistory.value) return
   const r = etfHistory.value.returns
   for (const yr of years.value) {
-    if (r[yr.y] !== undefined) yr.r = r[yr.y]
+    if (r[yr.y] !== undefined) {
+      yr.r = r[yr.y]
+    }
+  }
+  // Override current year with personalized return if available
+  if (personalReturn.value !== null) {
+    const currentYear = new Date().getFullYear()
+    const cur = years.value.find(yr => yr.y === currentYear)
+    if (cur) cur.r = personalReturn.value
   }
 }
 
@@ -205,6 +229,13 @@ const hasHistorical = computed(() => {
           </div>
           <input type="range" min="0" max="200000" step="1000" v-model.number="startBudget">
         </div>
+        <div class="sl" style="margin-top: 8px">
+          <div class="sl-head">
+            <span class="sl-lbl">Investiert seit</span>
+            <span class="sl-val">{{ startMonth }}</span>
+          </div>
+          <input type="month" v-model="startMonth" class="input-month">
+        </div>
       </div>
 
       <!-- Year params -->
@@ -217,15 +248,13 @@ const hasHistorical = computed(() => {
         </div>
         <div v-if="etfHistory" class="etf-info">
           {{ etfHistory.name }} · Stand: {{ etfHistory.updated }}
-          <a class="btn-refresh" href="https://github.com/hamsterbacke23/etf-rechner/actions/workflows/deploy.yml" target="_blank" rel="noopener">
-            🔄 Daten aktualisieren
-          </a>
         </div>
         <div v-for="(yr, idx) in years" :key="yr.y" class="yr-row">
           <div class="yr-label">
             {{ yr.y }}
             <span v-if="etfHistory?.returns[yr.y] !== undefined" class="yr-actual">
-              real: {{ fmtRet(etfHistory.returns[yr.y]) }}
+              real: {{ fmtRet(yr.y === new Date().getFullYear() && personalReturn !== null ? personalReturn : etfHistory.returns[yr.y]) }}
+              <template v-if="yr.y === new Date().getFullYear()">(ab {{ startMonth }})</template>
             </span>
           </div>
           <div class="yr-sliders">
@@ -311,7 +340,13 @@ const hasHistorical = computed(() => {
         </div>
       </div>
 
-      <div class="disclaimer">Keine Anlageberatung · Vergangene Renditen sind keine Garantie</div>
+      <div class="disclaimer">
+        Keine Anlageberatung · Vergangene Renditen sind keine Garantie
+        <br>
+        <a v-if="etfHistory" class="btn-refresh" href="https://github.com/hamsterbacke23/etf-rechner/actions/workflows/deploy.yml" target="_blank" rel="noopener">
+          🔄 Daten aktualisieren
+        </a>
+      </div>
     </div>
   </div>
 </template>
@@ -403,5 +438,7 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .tl-row.hit .tl-when { color: #4ade80; }
 .tl-mo { margin-left: auto; font-size: 11px; color: #555; font-family: monospace; }
 
-.disclaimer { text-align: center; font-size: 9px; color: #262626; margin-top: 16px; padding-bottom: 20px; }
+.disclaimer { text-align: center; font-size: 9px; color: #525252; margin-top: 16px; padding-bottom: 20px; }
+.disclaimer .btn-refresh { margin-top: 6px; display: inline-block; }
+.input-month { width: 100%; background: #262626; border: 1px solid #404040; color: #e5e5e5; padding: 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; }
 </style>
