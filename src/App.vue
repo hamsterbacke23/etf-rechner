@@ -1,9 +1,13 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const MILESTONES = [100000, 150000, 200000, 250000, 300000]
 const MO = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
-const START = 82300
+const DEFAULT_START = 20000
+
+const savedStart = localStorage.getItem('etf-start-budget')
+const startBudget = ref(savedStart !== null ? Number(savedStart) : DEFAULT_START)
+watch(startBudget, (v) => localStorage.setItem('etf-start-budget', String(v)))
 
 function fmt(v) {
   return Math.round(v).toLocaleString('de-DE') + ' €'
@@ -25,7 +29,7 @@ const showReal = ref(false)
 
 const result = computed(() => {
   const pts = []
-  let dep = START, totIn = 0, totG = 0
+  let dep = startBudget.value, totIn = 0, totG = 0
   const hits = {}
   const mi = Math.pow(1 + infl.value / 100, 1/12) - 1
 
@@ -138,7 +142,19 @@ function fmtRet(v) {
           </div>
         </div>
         <div class="chart-foot">
-          Eingezahlt: {{ fmt(result.totIn + START) }} · Rendite: {{ fmt(result.totG) }}
+          Eingezahlt: {{ fmt(result.totIn + startBudget) }} · Rendite: {{ fmt(result.totG) }}
+        </div>
+      </div>
+
+      <!-- Start budget -->
+      <div class="panel">
+        <div class="panel-title">Startkapital</div>
+        <div class="sl">
+          <div class="sl-head">
+            <span class="sl-lbl">Depotwert</span>
+            <span class="sl-val">{{ fmt(startBudget) }}</span>
+          </div>
+          <input type="range" min="0" max="200000" step="1000" v-model.number="startBudget">
         </div>
       </div>
 
