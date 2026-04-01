@@ -46,6 +46,7 @@ const output = {
   isin: 'IE00B3YLTY66',
   name: 'SPDR MSCI ACWI IMI UCITS ETF',
   updated: new Date().toISOString().slice(0, 10),
+  currentPrice: r.meta.regularMarketPrice,
   returns,
   monthlyPrices,
 }

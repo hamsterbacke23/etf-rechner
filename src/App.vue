@@ -18,6 +18,7 @@ function saveSettings() {
   localStorage.setItem(LS_KEY, JSON.stringify({
     startBudget: startBudget.value,
     startMonth: startMonth.value,
+    entryPrice: entryPrice.value,
     years: years.value,
     infl: infl.value,
     ue: ue.value,
@@ -29,6 +30,7 @@ const saved = loadSettings()
 
 const startBudget = ref(saved?.startBudget ?? DEFAULT_START)
 const startMonth = ref(saved?.startMonth ?? '2026-02')
+const entryPrice = ref(saved?.entryPrice ?? 10.11)
 const years = ref(saved?.years ?? [
   { y: 2026, r: 7, s: 2000 },
   { y: 2027, r: 7, s: 2000 },
@@ -40,7 +42,7 @@ const infl = ref(saved?.infl ?? 2.0)
 const ue = ref(saved?.ue ?? { on: false, y: 2027, m: 0, d: 6, rs: 1000 })
 const showReal = ref(saved?.showReal ?? false)
 
-watch([startBudget, startMonth, years, infl, ue, showReal], saveSettings, { deep: true })
+watch([startBudget, startMonth, entryPrice, years, infl, ue, showReal], saveSettings, { deep: true })
 
 function fmt(v) {
   return Math.round(v).toLocaleString('de-DE') + ' €'
@@ -126,18 +128,10 @@ onMounted(async () => {
   etfLoading.value = false
 })
 
-// Personalized return for current year based on startMonth
+// Personalized return for current year based on entry price
 const personalReturn = computed(() => {
-  if (!etfHistory.value?.monthlyPrices) return null
-  const prices = etfHistory.value.monthlyPrices
-  const startPrice = prices[startMonth.value]
-  if (!startPrice) return null
-  // Find latest price
-  const keys = Object.keys(prices).sort()
-  const latestKey = keys[keys.length - 1]
-  const latestPrice = prices[latestKey]
-  if (!latestPrice || latestKey <= startMonth.value) return null
-  return Math.round(((latestPrice / startPrice) - 1) * 1000) / 10
+  if (!etfHistory.value?.currentPrice || !entryPrice.value) return null
+  return Math.round(((etfHistory.value.currentPrice / entryPrice.value) - 1) * 1000) / 10
 })
 
 function applyHistorical() {
@@ -235,6 +229,19 @@ const hasHistorical = computed(() => {
             <span class="sl-val">{{ startMonth }}</span>
           </div>
           <input type="month" v-model="startMonth" class="input-month">
+        </div>
+        <div class="sl" style="margin-top: 8px">
+          <div class="sl-head">
+            <span class="sl-lbl">Einstiegskurs (€/Anteil)</span>
+            <span class="sl-val">{{ entryPrice.toFixed(2) }} €</span>
+          </div>
+          <input type="number" v-model.number="entryPrice" step="0.01" min="0" class="input-month">
+        </div>
+        <div v-if="etfHistory?.currentPrice" class="etf-price-info">
+          Aktueller Kurs: {{ etfHistory.currentPrice.toFixed(2) }} €
+          <span v-if="personalReturn !== null" :class="personalReturn >= 0 ? 'ret-pos' : 'ret-neg'">
+            ({{ fmtRet(personalReturn) }})
+          </span>
         </div>
       </div>
 
@@ -441,4 +448,7 @@ input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 
 .disclaimer { text-align: center; font-size: 9px; color: #525252; margin-top: 16px; padding-bottom: 20px; }
 .disclaimer .btn-refresh { margin-top: 6px; display: inline-block; }
 .input-month { width: 100%; background: #262626; border: 1px solid #404040; color: #e5e5e5; padding: 6px; border-radius: 4px; font-size: 12px; font-family: 'SF Mono', Menlo, monospace; }
+.etf-price-info { font-size: 11px; color: #737373; margin-top: 8px; }
+.ret-pos { color: #4ade80; font-weight: 700; }
+.ret-neg { color: #f87171; font-weight: 700; }
 </style>
