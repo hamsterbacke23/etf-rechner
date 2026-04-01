@@ -138,7 +138,7 @@ function fmtRet(v) {
           </div>
           <div v-for="(bar, i) in chartData.bars" :key="'b'+i" class="chart-bar-wrap">
             <div class="chart-bar" :style="{ height: bar.h + 'px' }" />
-            <div v-if="bar.label" class="chart-lbl">{{ bar.label }}</div>
+            <div class="chart-lbl">{{ bar.label }}</div>
           </div>
         </div>
         <div class="chart-foot">
@@ -284,7 +284,7 @@ h1 { font-size: 22px; font-weight: 700; color: white; margin: 2px 0 16px; }
 .chart-area { display: flex; align-items: flex-end; gap: 1px; height: 170px; position: relative; padding-bottom: 20px; }
 .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; }
 .chart-bar { width: 100%; max-width: 18px; border-radius: 2px 2px 0 0; min-height: 2px; background: linear-gradient(to top, #92400e, #ca8a04); transition: height 0.3s; }
-.chart-lbl { font-size: 8px; color: #555; margin-top: 2px; white-space: nowrap; }
+.chart-lbl { font-size: 8px; color: #555; margin-top: 2px; white-space: nowrap; min-height: 10px; }
 .chart-msline { position: absolute; left: 0; right: 0; border-top: 1px dashed #444; opacity: 0.3; }
 .chart-msline.hit { border-color: #22c55e; opacity: 0.5; }
 .chart-msline span { position: absolute; right: 0; top: -11px; font-size: 8px; font-family: monospace; color: #555; }
